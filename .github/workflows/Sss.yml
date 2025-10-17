@@ -1,4 +1,4 @@
-name: Daily Playlist Generator
+name: ♋ Daily Playlist Generator
 
 on:
   schedule:
@@ -34,5 +34,5 @@ jobs:
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
           git add docs/combined_playlist.m3u docs/.nojekyll
-          git commit -m "Update combined playlist" || echo "No changes to commit"
+          git commit -m "🔁 Update combined playlist" || echo "No changes to commit"
           git push origin main
