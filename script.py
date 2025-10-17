@@ -89,7 +89,7 @@ def server3(hash, name):
 
 # Your channel lists remain the same
 lis = [
-    "brazzerstv",
+    "brazzers-tv-online/",
     "hustlerhd",
     "hustlertv",
     "penthouse",
