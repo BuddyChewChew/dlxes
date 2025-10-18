@@ -12,6 +12,9 @@ CHANNEL_LOGO = "https://github.com/BuddyChewChew/gen-playlist/blob/main/docs/ch.
 # Define the required Referer URL for all streams
 REFERER_URL = "https://adult-tv-channels.com/"
 
+# New token API base URL (Speculative fix for Server 2/3 token retrieval)
+NEW_TOKEN_API_BASE = "https://server.moonlight.link"
+
 # --- Utility Functions ---
 
 def create_nojekyll():
@@ -34,20 +37,22 @@ def runServers():
         file.write(f"# Playlist Generated: {datetime.datetime.now().isoformat()}\n")
 
     # Process each server and append to the combined playlist
-    print("\n--- Running Server 1 Channels ---")
+    print("\n--- Running Server 1 Channels (Referer Fix Applied) ---")
     for i in range(len(lis)):
         print(f"{i+1}. {lis[i]}")
         server1(i + 1, lis[i])
 
-    print("\n--- Running Server 2 Channels ---")
-    for i in range(len(hashCode)):
+    # 🛠️ CHANGE: Removed 'hashCode[i]' argument from server2 call
+    print("\n--- Running Server 2 Channels (Speculative API Fix Applied) ---")
+    for i in range(len(channels)):
         print(f"{i+1}. {channels[i]}")
-        server2(hashCode[i], channels[i])
+        server2(channels[i])
 
-    print("\n--- Running Server 3 Channels ---")
-    for i in range(len(hashcode_3)):
+    # 🛠️ CHANGE: Removed 'hashcode_3[i]' argument from server3 call
+    print("\n--- Running Server 3 Channels (Speculative API Fix Applied) ---")
+    for i in range(len(channels_3)):
         print(f"{i+1}. {channels_3[i]}")
-        server3(hashcode_3[i], channels_3[i])
+        server3(channels_3[i])
 
 # --- Server Functions ---
 
@@ -88,22 +93,24 @@ def server1(i, name):
         print(f"An unexpected error occurred for {name}: {e}")
 
 
-def server2(hash, name):
-    """Fetches tokens and builds stream URLs for Server 2 channels."""
-    print("Running Server 2")
+def server2(name):
+    """
+    🛠️ FIX: Uses speculative new token API (removed old hash logic) 
+    and adds Referer to the stream.
+    """
+    print(f"Running Server 2 Logic for {name}")
     try:
         res = requests.post(
-            f"https://adult-tv-channels.click/C1Ep6maUdBIeKDQypo7a/{hash}",
+            f"{NEW_TOKEN_API_BASE}/api/token/{name}",
             headers={"Content-Type": "application/x-www-form-urlencoded"},
             timeout=10
         )
-        res.raise_for_status() # Catches 4xx/5xx HTTP errors
+        res.raise_for_status() 
         
         data = res.json()
         
-        # Safer JSON handling
-        if "fileUrl" not in data:
-             raise ValueError("API response missing 'fileUrl' token.")
+        if "fileUrl" not in data or not data["fileUrl"]:
+             raise ValueError("API response missing 'fileUrl' token or token is empty.")
              
         token = data["fileUrl"]
         
@@ -124,23 +131,24 @@ def server2(hash, name):
     except Exception as e:
         print(f"An unexpected error occurred for {name}: {e}")
 
-def server3(hash, name):
-    """Fetches tokens and builds stream URLs for Server 3 channels."""
-    print("Running Server 3")
+def server3(name):
+    """
+    🛠️ FIX: Uses speculative new token API (removed old hash logic) 
+    and adds Referer to the stream.
+    """
+    print(f"Running Server 3 Logic for {name}")
     try:
-        url = f"https://fuckflix.click/8RLxsc2AW1q8pvyvjqIQ"
         res = requests.post(
-            f"{url}/{hash}",  
+            f"{NEW_TOKEN_API_BASE}/api/token/{name}",
             headers={"Content-Type": "application/x-www-form-urlencoded"},
             timeout=10
         )
-        res.raise_for_status() # Catches 4xx/5xx HTTP errors
+        res.raise_for_status() 
         
         data = res.json()
         
-        # Safer JSON handling
-        if "fileUrl" not in data:
-             raise ValueError("API response missing 'fileUrl' token.")
+        if "fileUrl" not in data or not data["fileUrl"]:
+             raise ValueError("API response missing 'fileUrl' token or token is empty.")
              
         token = data["fileUrl"]
         
@@ -172,7 +180,8 @@ lis = [
     "satisfaction", "jasmin", "fap", "olala", "miamitv",
 ]
 
-# for Server 2
+# hashCode and hashcode_3 are now technically obsolete, but kept for context.
+# Only 'channels' and 'channels_3' are used to iterate through.
 hashCode = [
     "Sdw0p0xE3E", "yoni9C8jfd", "ZS40W182Zq", "czS16artgz", "xBFRYv6yXh", "hghdvp9Z03", 
     "ByYpxFkJZe", "5LvPjA7oms", "HdcCGPssEy", "sI8DBZkklJ", "sSEWMS7slF", "dRTbLz32p7", 
