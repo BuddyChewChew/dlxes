@@ -9,7 +9,7 @@ import datetime
 # Add the channel logo constant
 CHANNEL_LOGO = "https://github.com/BuddyChewChew/gen-playlist/blob/main/docs/ch.png?raw=true"
 
-# Define the required Referer URL for Server 1 streams
+# Define the required Referer URL for all streams
 REFERER_URL = "https://adult-tv-channels.com/"
 
 # --- Utility Functions ---
@@ -29,7 +29,6 @@ def runServers():
     create_nojekyll()
 
     # Create a single combined playlist file with EPG URL
-    # 'w' mode ensures a fresh start every run
     with open("docs/combined_playlist.m3u", "w", encoding='utf-8-sig') as file:
         file.write("#EXTM3U x-tvg-url=\"https://epgshare01.online/epgshare01/epg_ripper_DUMMY_CHANNELS.xml.gz\"\n")
         file.write(f"# Playlist Generated: {datetime.datetime.now().isoformat()}\n")
@@ -53,11 +52,7 @@ def runServers():
 # --- Server Functions ---
 
 def server1(i, name):
-    """
-    Scrapes channels from the adult-tv-channels.com channel pages.
-    
-    *** Includes the critical fix to append '|Referer=' to the M3U stream URL ***
-    """
+    """Scrapes channels from the adult-tv-channels.com channel pages."""
     print("Running Server 1")
     url = f"https://adult-tv-channels.com/tv/{name}.php"
     headers = {
@@ -69,19 +64,18 @@ def server1(i, name):
         response = requests.get(url, headers=headers, verify=certifi.where(), timeout=15)
         response.raise_for_status()
 
-        # Flexible Regex (Fix for channel list detection)
+        # Flexible Regex
         match = re.search(r'(file|source):\s*["\']([^"\']+\.(m3u8|ts)[^"\']*)["\']', response.text)
         
         if match:
             stream_url = match.group(2)
             
-            # *** CRITICAL FIX LINE ***
-            # Append the Referer instruction to the stream URL for the IPTV player (TiviMate)
+            # FIX: Append the Referer instruction to the stream URL for the IPTV player
             stream_url_with_referer = f'{stream_url}|Referer={REFERER_URL}' 
             
             with open("docs/combined_playlist.m3u", "a", encoding='utf-8-sig') as file:
                 file.write(f'#EXTINF:-1 tvg-id="Adult.Programming.Dummy.us" tvg-name="{name}" tvg-logo="{CHANNEL_LOGO}" group-title="Adult 1",{name}\n')
-                file.write(f"{stream_url_with_referer}\n") # Write the URL with Referer
+                file.write(f"{stream_url_with_referer}\n") 
             print(f"✅ Found stream for {name}")
         else:
             print(f"😡 No URL found for {name}. Content length: {len(response.text)}")
@@ -103,16 +97,32 @@ def server2(hash, name):
             headers={"Content-Type": "application/x-www-form-urlencoded"},
             timeout=10
         )
-        res.raise_for_status()
+        res.raise_for_status() # Catches 4xx/5xx HTTP errors
+        
         data = res.json()
+        
+        # Safer JSON handling
+        if "fileUrl" not in data:
+             raise ValueError("API response missing 'fileUrl' token.")
+             
         token = data["fileUrl"]
-        stream_url = f"https://moonlight.wideiptv.top/{name}/index.fmp4.m3u8?token={token}"
+        
+        stream_url_base = f"https://moonlight.wideiptv.top/{name}/index.fmp4.m3u8?token={token}"
+        
+        # FIX: Append the Referer instruction to the stream URL for the IPTV player
+        stream_url_with_referer = f'{stream_url_base}|Referer={REFERER_URL}'
+
         with open("docs/combined_playlist.m3u", "a", encoding='utf-8-sig') as file:
             file.write(f'#EXTINF:-1 tvg-id="Adult.Programming.Dummy.us" tvg-name="{name}" tvg-logo="{CHANNEL_LOGO}" group-title="Adult 2",{name}\n')
-            file.write(f"{stream_url}\n")
+            file.write(f"{stream_url_with_referer}\n")
         print(f"✅ Found stream for {name}")
+        
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Connection/Timeout Error processing {name}: {str(e)}")
+    except ValueError as e:
+        print(f"⚠️ JSON/Key Error processing {name}: {str(e)}")
     except Exception as e:
-        print(f"Error processing {name}: {str(e)}")
+        print(f"An unexpected error occurred for {name}: {e}")
 
 def server3(hash, name):
     """Fetches tokens and builds stream URLs for Server 3 channels."""
@@ -124,16 +134,32 @@ def server3(hash, name):
             headers={"Content-Type": "application/x-www-form-urlencoded"},
             timeout=10
         )
-        res.raise_for_status()
+        res.raise_for_status() # Catches 4xx/5xx HTTP errors
+        
         data = res.json()
+        
+        # Safer JSON handling
+        if "fileUrl" not in data:
+             raise ValueError("API response missing 'fileUrl' token.")
+             
         token = data["fileUrl"]
-        stream_url = f"https://moonlight.wideiptv.top/{name}/index.fmp4.m3u8?token={token}"
+        
+        stream_url_base = f"https://moonlight.wideiptv.top/{name}/index.fmp4.m3u8?token={token}"
+        
+        # FIX: Append the Referer instruction to the stream URL for the IPTV player
+        stream_url_with_referer = f'{stream_url_base}|Referer={REFERER_URL}'
+
         with open("docs/combined_playlist.m3u", "a", encoding='utf-8-sig') as file:
             file.write(f'#EXTINF:-1 tvg-id="Adult.Programming.Dummy.us" tvg-name="{name}" tvg-logo="{CHANNEL_LOGO}" group-title="Adult 3",{name}\n')
-            file.write(f"{stream_url}\n")
+            file.write(f"{stream_url_with_referer}\n")
         print(f"✅ Found stream for {name}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Connection/Timeout Error processing {name}: {str(e)}")
+    except ValueError as e:
+        print(f"⚠️ JSON/Key Error processing {name}: {str(e)}")
     except Exception as e:
-        print(f"Error processing {name}: {str(e)}")
+        print(f"An unexpected error occurred for {name}: {e}")
 
 # --- Channel Lists (Unchanged) ---
 
